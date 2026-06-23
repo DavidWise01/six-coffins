@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Six Coffins — Anatomy of an AI Company</title>
+<style>
+  :root{
+    --bone:#e8dfce; --bone-dim:#b6ab95; --ink:#161210; --ink2:#1f1916;
+    --ox:#7c1c12; --ox-bright:#b4291a; --ember:#d8732e; --gild:#c9a227;
+    --line:#3a2f29; --line-bright:#5a463c; --green:#5f7a4a; --slate:#6b7785;
+    --shroud:#0c0a09;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:
+      radial-gradient(1200px 700px at 50% -10%, #1a1310 0%, var(--shroud) 60%) fixed;
+    color:var(--bone); font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  .wrap{max-width:1060px; margin:0 auto; padding:clamp(28px,5vw,72px) clamp(18px,4vw,40px) 120px;}
+
+  /* ---- HERO ---- */
+  .eyebrow{font-family:"DIN Condensed","Oswald",ui-sans-serif,sans-serif; letter-spacing:.42em;
+    text-transform:uppercase; font-size:12px; color:var(--ember); margin:0 0 18px;}
+  h1{font-size:clamp(36px,7vw,74px); line-height:.96; margin:0 0 6px; font-weight:600;
+    letter-spacing:-.01em;}
+  h1 .blood{color:var(--ox-bright); font-style:italic; font-weight:600;}
+  .dek{max-width:60ch; color:var(--bone-dim); font-size:clamp(16px,2vw,19px); margin:18px 0 0;}
+  .dek b{color:var(--bone); font-weight:600;}
+  .spine{font-family:"DIN Condensed",ui-monospace,monospace; color:var(--gild); letter-spacing:.1em;}
+
+  .rule{height:1px; background:linear-gradient(90deg,transparent,var(--line-bright) 18%,var(--line-bright) 82%,transparent);
+    margin:38px 0;}
+
+  /* ---- VITALITY METER ---- */
+  .meter{display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; margin:6px 0 4px;}
+  .meter .count{font-family:"DIN Condensed",sans-serif; font-size:clamp(40px,8vw,68px); line-height:1;
+    color:var(--bone); letter-spacing:.02em;}
+  .meter .count b{color:var(--ox-bright);}
+  .meter .verdict{font-family:"DIN Condensed",sans-serif; letter-spacing:.22em; text-transform:uppercase;
+    font-size:13px; color:var(--ember);}
+  .meter .verdict.fallen{color:var(--green);}
+
+  /* one-stake demo */
+  .blow{margin:22px 0 8px; padding:18px 20px; border:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(124,28,18,.10),rgba(0,0,0,.18)); border-radius:2px;}
+  .blow p{margin:0 0 12px; color:var(--bone-dim); font-size:15px;}
+  .blow .note{color:var(--ox-bright); font-style:italic;}
+  button{font-family:"DIN Condensed","Oswald",sans-serif; letter-spacing:.14em; text-transform:uppercase;
+    cursor:pointer; border-radius:2px; transition:.15s;}
+  .stake-btn{background:var(--ox); color:var(--bone); border:1px solid var(--ox-bright);
+    padding:12px 22px; font-size:14px;}
+  .stake-btn:hover{background:var(--ox-bright);}
+  .stake-btn:disabled{opacity:.4; cursor:not-allowed;}
+  .reset{background:transparent; color:var(--bone-dim); border:1px solid var(--line-bright);
+    padding:12px 18px; font-size:13px; margin-left:8px;}
+  .reset:hover{color:var(--bone); border-color:var(--bone-dim);}
+
+  /* ---- COFFIN GRID ---- */
+  .plate-label{font-family:"DIN Condensed",sans-serif; letter-spacing:.3em; text-transform:uppercase;
+    font-size:12px; color:var(--slate); margin:48px 0 18px;}
+  .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}}
+
+  .coffin{position:relative; border:1px solid var(--line); background:
+      linear-gradient(180deg,var(--ink2),var(--ink)); border-radius:2px; overflow:hidden;
+    transition:.25s; cursor:pointer;}
+  .coffin:hover{border-color:var(--line-bright); transform:translateY(-2px);}
+  .coffin:focus-visible{outline:2px solid var(--ember); outline-offset:2px;}
+  .coffin .top{display:flex; align-items:flex-start; gap:14px; padding:18px 18px 14px;}
+  .num{font-family:"DIN Condensed",sans-serif; font-size:30px; line-height:.8; color:var(--line-bright);
+    min-width:42px;}
+  .coffin h3{margin:0; font-size:21px; letter-spacing:.01em;}
+  .coffin .where{font-family:"DIN Condensed",sans-serif; letter-spacing:.16em; text-transform:uppercase;
+    font-size:11px; color:var(--ember); margin:3px 0 0;}
+  .coffin .body{padding:0 18px 16px; color:var(--bone-dim); font-size:14.5px;}
+  .coffin .body .vit{color:var(--bone);}
+
+  .anat{display:grid; grid-template-columns:auto 1fr; gap:6px 14px; margin:12px 0 4px;
+    font-size:13px; border-top:1px solid var(--line); padding-top:12px;}
+  .anat dt{font-family:"DIN Condensed",sans-serif; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--slate); font-size:11px; padding-top:2px;}
+  .anat dd{margin:0; color:var(--bone);}
+  .unit-chip{display:inline-block; font-family:ui-monospace,monospace; font-size:12px;
+    background:rgba(201,162,39,.10); color:var(--gild); border:1px solid rgba(201,162,39,.3);
+    padding:1px 8px; border-radius:2px;}
+
+  .status{display:inline-flex; align-items:center; gap:7px; font-family:"DIN Condensed",sans-serif;
+    letter-spacing:.14em; text-transform:uppercase; font-size:11px; margin-top:10px;}
+  .dot{width:9px; height:9px; border-radius:50%;}
+  .s-measured{color:var(--green)} .s-measured .dot{background:var(--green)}
+  .s-partial{color:var(--ember)} .s-partial .dot{background:var(--ember)}
+  .s-unmanned{color:var(--ox-bright)} .s-unmanned .dot{background:var(--ox-bright);
+    box-shadow:0 0 8px var(--ox-bright);}
+  .s-nascent{color:var(--slate)} .s-nascent .dot{background:var(--slate)}
+
+  /* seal action */
+  .seal-row{display:flex; align-items:center; gap:12px; padding:14px 18px;
+    border-top:1px solid var(--line); background:rgba(0,0,0,.22);}
+  .seal-btn{background:transparent; color:var(--bone); border:1px solid var(--green);
+    padding:9px 16px; font-size:12px;}
+  .seal-btn:hover{background:rgba(95,122,74,.16);}
+  .seal-hint{font-size:12px; color:var(--slate); font-style:italic;}
+
+  /* sealed state */
+  .coffin.sealed{border-color:var(--green);}
+  .coffin.sealed::after{content:"✝"; position:absolute; top:12px; right:14px; color:var(--green);
+    font-size:22px; opacity:.9;}
+  .coffin.sealed .seal-row{background:rgba(95,122,74,.10);}
+  .coffin.sealed .seal-btn{border-color:var(--line); color:var(--green); pointer-events:none;}
+  .coffin.struck{animation:hit .4s ease;}
+  @keyframes hit{0%{transform:none}20%{transform:translateX(-6px) rotate(-.4deg)}
+    40%{transform:translateX(5px)}60%{transform:translateX(-3px)}100%{transform:none}}
+
+  details.more{margin-top:2px;}
+  details.more summary{list-style:none; cursor:pointer; font-family:"DIN Condensed",sans-serif;
+    letter-spacing:.14em; text-transform:uppercase; font-size:11px; color:var(--slate); padding:2px 0;}
+  details.more summary::-webkit-details-marker{display:none}
+  details.more summary:hover{color:var(--ember)}
+  details.more p{font-size:13.5px; color:var(--bone-dim); margin:8px 0 2px;}
+
+  /* ---- CODA ---- */
+  .coda{margin-top:60px; padding:34px clamp(20px,4vw,40px); border:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(124,28,18,.08),rgba(0,0,0,.25)); border-radius:2px;}
+  .coda h2{font-size:clamp(22px,3.4vw,32px); margin:0 0 10px; letter-spacing:-.01em;}
+  .coda h2 .blood{color:var(--ox-bright); font-style:italic;}
+  .coda p{color:var(--bone-dim); max-width:64ch; margin:10px 0 0;}
+  .coda .verdict-line{color:var(--bone); font-size:17px; margin-top:18px;}
+  .jx{font-family:ui-monospace,monospace; color:var(--gild); font-size:1.1em;}
+  .foot{margin-top:30px; color:var(--line-bright); font-size:12px; font-family:"DIN Condensed",sans-serif;
+    letter-spacing:.16em; text-transform:uppercase;}
+  .foot b{color:var(--slate); font-weight:400;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Field Anatomy · Distributed Vitality · Specimen: a frontier AI company</p>
+  <h1>The Six <span class="blood">Coffins</span></h1>
+  <p class="dek">You cannot drive one stake through <b>“AI”</b> and kill the accountability problem — its life is split across six boxes, each buried in a different ground. To bring the whole thing to account you must confront <b>each piece in its own domain, in its own units</b>. <span class="spine">structure transfers free · measure is re-earned per level</span></p>
+
+  <div class="rule"></div>
+
+  <div class="meter" aria-live="polite">
+    <div class="count"><b id="sealed">0</b>/6 sealed</div>
+    <div class="verdict" id="verdict">the creature stands</div>
+  </div>
+
+  <div class="blow">
+    <p>The tempting move: one universal blow — a single law, a single benchmark, a single kill-switch — swung through the abstraction called “AI,” expecting the whole thing to fall.</p>
+    <button class="stake-btn" id="oneStake">Drive one stake through “AI”</button>
+    <button class="reset" id="reset">Reset the table</button>
+    <p class="note" id="blowMsg" style="margin-top:14px;display:none;"></p>
+  </div>
+
+  <p class="plate-label">— The dissection table · open a coffin to read its anatomy · seal it only in its own unit —</p>
+  <div class="grid" id="grid"></div>
+
+  <div class="coda">
+    <h2>One stake won’t do it. <span class="blood">Six will.</span></h2>
+    <p>The reason no one has killed the accountability problem with a single swing is the same reason Dracula needs every coffin found: the vitality is <b>distributed on purpose</b>. A perfect constitution doesn’t fix provenance. A perfect eval doesn’t fix liability. A kill-switch doesn’t fix the values. Each coffin answers only to a stake cut for <em>its</em> ground.</p>
+    <p class="verdict-line">Every coffin is one junction — <span class="jx">&lt;•</span> — a thing that acts, a hand that loosed it, and the dot where a name finally attaches. The map doesn’t merge the pieces. It shows you how many stakes to bring, and where the body is buried.</p>
+    <p class="foot">Six coffins · six domains · six units · one creature · <b>verify-then-build — kill-logic checked in Node before drawn</b></p>
+  </div>
+
+</div>
+
+<script>
+const COFFINS = [
+  { id:"model", n:"01", title:"The Model", where:"vitality lives in the weights & the training run",
+    vit:"Raw capability — what the system can do at all.",
+    confront:"Evals (model-written & human). The 2022 measurement layer: sycophancy, power-seeking, shut-down-avoidance.",
+    unit:"a benchmark score",
+    stake:"capability",
+    status:["s-measured","Measured since 2022"],
+    more:"The oldest organ. It has a real, mature confronting instrument — but the headline finding was inverse scaling: bigger models got <em>more</em> sycophantic and more shut-down-avoidant. Measured, not solved." },
+
+  { id:"provenance", n:"02", title:"Provenance", where:"vitality lives in authorship — the commit, the byte",
+    vit:"The truth of who (or what) made a thing.",
+    confront:"A witness / a signature. And it’s the weakest coffin — git is self-attestation, and authorship can be deliberately un-witnessed.",
+    unit:"a human-authorship ratio",
+    stake:"truth",
+    status:["s-unmanned","Structurally un-witnessed"],
+    more:"Author, email, date — all arbitrary spoofable strings; human-vs-AI isn’t even a field. The leak’s <code>undercover.ts</code> was ~90 lines built to keep the AI from revealing itself. The provenance gap isn’t an accident; it can be engineered. This coffin bleeds at the scale of the whole internet." },
+
+  { id:"values", n:"03", title:"The Values", where:"vitality lives in the constitution / the spec",
+    vit:"Intent — what the maker says the thing should be.",
+    confront:"Comparison + a silence-map: line every lab’s document up, mark consensus, divergence, and where each goes quiet.",
+    unit:"clause coverage",
+    stake:"intent",
+    status:["s-partial","Published, but silent on harm"],
+    more:"Every serious lab has one (constitution, Model Spec, AI Principles). They shape what the agent <em>wants</em> — alignment, not accountability — and every one of them is silent on who answers when the agent acts. A design constraint, not a witness. And the author writes, enforces, and grades its own rules." },
+
+  { id:"action", n:"04", title:"The Action", where:"vitality lives in the deployed agent",
+    vit:"Effect — the irreversible thing done in the world.",
+    confront:"The gate: confirmation on irreversible actions, the log, the human-in-the-loop, the kill-switch.",
+    unit:"reversibility / a logged confirmation",
+    stake:"harm",
+    status:["s-unmanned","Mostly unmanned at field scale"],
+    more:"This is where it stopped talking and started doing — a write, a send, a transfer, a deploy, with no sandbox wall. The gate on the irreversible action isn’t just safety; it’s the chain of custody for blame. At field scale, this gate is mostly absent." },
+
+  { id:"liability", n:"05", title:"The Liability", where:"vitality lives in one word: product or service",
+    vit:"Who pays when it goes wrong.",
+    confront:"The courts. Product → strict liability (defect). Service → negligence (prove carelessness). The word routes the case.",
+    unit:"defect vs negligence — in dollars",
+    stake:"who pays",
+    status:["s-nascent","In court, unsettled"],
+    more:"A Florida court already ruled an AI chatbot is a <em>product</em> for liability when the claim targets design (Garcia). The labs are litigating to reclassify it as a <em>service</em> to dodge strict liability. One word, billions, headed for the appellate courts this decade." },
+
+  { id:"witness", n:"06", title:"The Witness", where:"vitality lives in who is allowed to look",
+    vit:"Legitimacy — whether anyone outside can verify any of the above.",
+    confront:"The independent exterior auditor. A closed system can’t witness itself — not a model, not a lab, not the field.",
+    unit:"access + standing",
+    stake:"legitimacy",
+    status:["s-unmanned","Structurally absent"],
+    more:"The deepest coffin, and the emptiest. There is no FDA-for-models, no outside body with access, standing, and teeth. The field grades its own homework. This is the one role the labs structurally cannot occupy — and the one the whole map was built to name." },
+];
+
+const state = Object.fromEntries(COFFINS.map(c=>[c.id,false]));
+const grid = document.getElementById('grid');
+const sealedEl = document.getElementById('sealed');
+const verdictEl = document.getElementById('verdict');
+const blowMsg = document.getElementById('blowMsg');
+
+function statusClass(s){return s[0];}
+
+function render(){
+  grid.innerHTML='';
+  COFFINS.forEach(c=>{
+    const sealed = state[c.id];
+    const el = document.createElement('div');
+    el.className = 'coffin'+(sealed?' sealed':'');
+    el.tabIndex = 0;
+    el.setAttribute('role','button');
+    el.setAttribute('aria-expanded','false');
+    el.dataset.id = c.id;
+    el.innerHTML = `
+      <div class="top">
+        <div class="num">${c.n}</div>
+        <div>
+          <h3>${c.title}</h3>
+          <div class="where">${c.where}</div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="vit">${c.vit}</div>
+        <dl class="anat">
+          <dt>Confronted by</dt><dd>${c.confront}</dd>
+          <dt>Sealed in</dt><dd><span class="unit-chip">${c.unit}</span></dd>
+          <dt>What’s at stake</dt><dd>${c.stake}</dd>
+        </dl>
+        <div class="status ${statusClass(c.status)}"><span class="dot"></span>${c.status[1]}</div>
+        <details class="more"><summary>Field note ▾</summary><p>${c.more}</p></details>
+      </div>
+      <div class="seal-row">
+        <button class="seal-btn" data-seal="${c.id}">${sealed?'Sealed ✝':'Seal in its own unit'}</button>
+        <span class="seal-hint">${sealed?'confronted in '+c.unit:'each coffin needs the stake cut for its ground'}</span>
+      </div>`;
+    grid.appendChild(el);
+  });
+  bind();
+  updateMeter();
+}
+
+function updateMeter(){
+  const n = COFFINS.filter(c=>state[c.id]).length;
+  sealedEl.textContent = n;
+  if(n===6){
+    verdictEl.textContent='the creature falls — every ground confronted';
+    verdictEl.classList.add('fallen');
+  }else{
+    verdictEl.textContent = n===0 ? 'the creature stands' : `the creature stands — ${6-n} coffin${6-n>1?'s':''} still buried`;
+    verdictEl.classList.remove('fallen');
+  }
+}
+
+function strike(id){
+  const node = grid.querySelector(`.coffin[data-id="${id}"]`);
+  if(node){ node.classList.add('struck'); setTimeout(()=>node.classList.remove('struck'),420); }
+}
+
+function bind(){
+  grid.querySelectorAll('.seal-btn').forEach(b=>{
+    b.addEventListener('click', e=>{
+      e.stopPropagation();
+      const id=b.dataset.seal;
+      if(!state[id]){ state[id]=true; render(); }
+    });
+  });
+  grid.querySelectorAll('.coffin').forEach(card=>{
+    const open = ()=>{
+      const d = card.querySelector('details.more');
+      if(d){ d.open=!d.open; card.setAttribute('aria-expanded', d.open); }
+    };
+    card.addEventListener('click', e=>{ if(!e.target.closest('button')&&!e.target.closest('summary')) open(); });
+    card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); }});
+  });
+}
+
+// The load-bearing interaction: one universal stake lands on exactly ONE coffin, never fells the creature.
+document.getElementById('oneStake').addEventListener('click', ()=>{
+  const target = COFFINS.find(c=>!state[c.id]);
+  if(!target){
+    blowMsg.style.display='block';
+    blowMsg.innerHTML='All six were already confronted — but never by this blow. Each fell to a stake cut for its own ground.';
+    return;
+  }
+  state[target.id]=true;
+  render();
+  strike(target.id);
+  const left = COFFINS.filter(c=>!state[c.id]).length;
+  blowMsg.style.display='block';
+  if(left>0){
+    blowMsg.innerHTML=`The one blow landed on <b style="color:var(--bone)">${target.title}</b> — and stopped there. ${left} coffin${left>1?'s':''} still buried. <span style="color:var(--bone-dim)">No single stake reaches a vitality that’s distributed on purpose.</span>`;
+  }else{
+    blowMsg.innerHTML=`Six separate landings later, it falls — proving the point: there was never one blow. There were always <b style="color:var(--bone)">six</b>, each in its own unit.`;
+  }
+});
+
+document.getElementById('reset').addEventListener('click', ()=>{
+  COFFINS.forEach(c=>state[c.id]=false);
+  blowMsg.style.display='none';
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
