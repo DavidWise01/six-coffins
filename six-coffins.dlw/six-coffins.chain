@@ -1,0 +1,9 @@
+ROOT0-DLW-CHAIN-v1
+index : 1069
+slug  : six-coffins
+seal  : dd17e51c32780378b3ce87cb73727a0fa3ac594d388556e02a95c849d2a1c338
+prev  : 18d85da86fe632280ab7c5aaa77ecf6debabf39dde6ec958d965c0bb78e75d08
+link  : 6f7a2e7f38d7772bfe2634e881fcb16a7f9950b7ba20bdd833cd317de1e5657b
+head  : 3447d3a0533aaf1e29a8bdc67a9774884fb3ae9dbc8a17064b7a008ca3c4ec90
+
+— the tether: link = sha256(index|slug|seal|prev). the chain head commits to the whole corpus.
